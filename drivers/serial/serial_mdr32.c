@@ -112,6 +112,8 @@ void serial_setbrg (void)
 	uart->IBRD = (divisor / 16 / 4);
 	uart->FBRD = (divisor & 077);
 
+	/* 8N1, FIFO enabled */
+	uart->LCR_H = (3 << 5);// | 0x10;
 	/* Enable uart, rx, tx */
 	uart->CR = 0x301;
 }
@@ -131,8 +133,6 @@ int serial_init (void)
 
 	RST_CLK->UART_CLOCK = (1 << 25);
 
-	/* 8N1, FIFO enabled */
-	uart->LCR_H = (3 << 5) | 0x10;
 	serial_setbrg ();
 
 	return (0);
@@ -144,6 +144,8 @@ void serial_putc (const char c)
 	if (c == '\n')
 	{
 	//	while ((uart->FR & UART_FR_TXFF) != 0);
+	for (i = 0; i < 1000; i++)
+		__asm__ volatile (" nop");
 		uart->DR = '\r';
 	}
 	for (i = 0; i < 1000; i++)

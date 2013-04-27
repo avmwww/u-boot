@@ -99,13 +99,6 @@ void __attribute__((section(".lpc18xx_image_top_text")))
 	lpc18xx_bootstrap_from_norflash(void);
 #endif /* CONFIG_LPC18XX_NORFLASH_BOOTSTRAP_WORKAROUND */
 
-void serial_putc (const char c);
-void step(void)
-{
-	static char a = 'a';
-	serial_putc(a++);
-}
-
  /*
   * Reset entry point
   */
@@ -115,7 +108,6 @@ void
 #endif
 	_start(void)
 {
-	step();
 	/*
 	 * Depending on the config parameter, enable or disable the WDT.
 	 */
@@ -127,7 +119,6 @@ void
 	wdt_enable();
 #endif
 
-	step();
 	/*
 	 * Make sure interrupts are disabled.
 	 */
@@ -152,11 +143,8 @@ void
 	 * Stack grows downwards; the stack base is set-up by the first
 	 * value in the first word in the vectors.
 	 */
-	step();
 	memcpy(&_data_start, &_data_lma_start, &_data_end - &_data_start);
-	step();
 	memset(&_bss_start, 0, &_bss_end - &_bss_start);
-	step();
 
 	/*
 	 * In U-boot (armboot) lingvo, "go to the C code" -
@@ -171,7 +159,6 @@ void
 	 * is defined in the CPU specific .lds file.
 	 */
 	_armboot_start = (unsigned long)&_mem_stack_base;
-	step();
 	start_armboot();
 }
 
