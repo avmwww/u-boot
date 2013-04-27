@@ -131,6 +131,9 @@ typedef volatile unsigned char	vu_char;
 #ifdef CONFIG_SYS_KINETIS
 #include <asm/arch-kinetis/kinetis.h>
 #endif
+#ifdef CONFIG_SYS_MDR32
+#include <asm/arch-mdr32/mdr32.h>
+#endif
 
 #include <part.h>
 #include <flash.h>
@@ -489,7 +492,7 @@ ulong	get_tbclk     (void);
  */
 #if defined(CONFIG_SYS_A2F) || defined(CONFIG_SYS_STM32) || \
     defined(CONFIG_SYS_LPC178X) || defined(CONFIG_SYS_KINETIS) || \
-    defined(CONFIG_SYS_M2S)
+    defined(CONFIG_SYS_M2S) || defined(CONFIG_SYS_MDR32)
 #define CONFIG_ARMCORTEXM3_RAMCODE
 #endif
 

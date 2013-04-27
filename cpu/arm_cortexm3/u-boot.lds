@@ -25,6 +25,9 @@ ENTRY(_start)
 
 #define NVM_BASE	(CONFIG_MEM_NVM_BASE + CONFIG_MEM_NVM_UBOOT_OFF)
 #define NVM_LEN		(CONFIG_MEM_NVM_LEN - CONFIG_MEM_NVM_UBOOT_OFF)
+#define RAM_BUF_BASE	(CONFIG_MEM_RAM_BASE + CONFIG_MEM_RAM_LEN)
+#define MALLOC_BASE	(RAM_BUF_BASE + CONFIG_MEM_RAM_BUF_LEN)
+#define STACK_BASE	(MALLOC_BASE + CONFIG_MEM_MALLOC_LEN)
 
 MEMORY
 {
@@ -32,11 +35,11 @@ MEMORY
 			LENGTH = NVM_LEN
 	RAM (rw):	ORIGIN = CONFIG_MEM_RAM_BASE, \
 			LENGTH = CONFIG_MEM_RAM_LEN
-	RAM_BUF (r):	ORIGIN = ORIGIN(RAM) + LENGTH(RAM), \
+	RAM_BUF (r):	ORIGIN = RAM_BUF_BASE, \
 			LENGTH = CONFIG_MEM_RAM_BUF_LEN
-	MALLOC (r):	ORIGIN = ORIGIN(RAM_BUF) + LENGTH(RAM_BUF), \
+	MALLOC (r):	ORIGIN = MALLOC_BASE, \
 			LENGTH = CONFIG_MEM_MALLOC_LEN
-	STACK (r):	ORIGIN = ORIGIN(MALLOC) + LENGTH(MALLOC), \
+	STACK (r):	ORIGIN = STACK_BASE, \
 			LENGTH = CONFIG_MEM_STACK_LEN
 }
 
@@ -90,6 +93,17 @@ SECTIONS
 		*(.u_boot_cmd)
 		__u_boot_cmd_end = .;
 	} >NVM
+
+	.ARM.extab : {
+		*(.ARM.extab* .gnu.linkonce.armextab.*)
+	} >NVM
+
+	__exidx_start = .;
+	.ARM.exidx :
+	{
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
+	} >NVM
+	__exidx_end = .;
 
 	.bss :
 	{

@@ -66,6 +66,8 @@ int arch_cpu_init(void)
 	gd->bd->bi_arch_number = MACH_TYPE_KINETIS;
 #elif defined(CONFIG_SYS_M2S)
 	gd->bd->bi_arch_number = MACH_TYPE_M2S;
+#elif defined(CONFIG_SYS_MDR32)
+	gd->bd->bi_arch_number = MACH_TYPE_MDR32;
 #else
 # error "Unsupported Cortex-M3 SOC."
 #endif
