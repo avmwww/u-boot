@@ -98,9 +98,9 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define CONFIG_SYS_MDR32_CONSOLE	UART2_BASE
 
-//static struct mdr32_uart *uart = (struct mdr32_uart *)CONFIG_SYS_MDR32_CONSOLE;
+static struct mdr32_uart *uart = (struct mdr32_uart *)CONFIG_SYS_MDR32_CONSOLE;
 
-#define uart ((struct mdr32_uart *)CONFIG_SYS_MDR32_CONSOLE)
+//#define uart ((struct mdr32_uart *)CONFIG_SYS_MDR32_CONSOLE)
 
 void serial_setbrg (void)
 {
@@ -143,25 +143,20 @@ void serial_putc (const char c)
 	int i;
 	if (c == '\n')
 	{
-	//	while ((uart->FR & UART_FR_TXFF) != 0);
-	for (i = 0; i < 1000; i++)
-		__asm__ volatile (" nop");
+		while (uart->FR & UART_FR_TXFF);
 		uart->DR = '\r';
 	}
-	for (i = 0; i < 1000; i++)
-		__asm__ volatile (" nop");
-//	while ((uart->FR & 0x20) != 0); /* Wait TXFF */
+	while (uart->FR & UART_FR_TXFF);
 	uart->DR = c;
 }
 
 int serial_getc (void)
 {
-	while ((uart->FR & 0x10) != 0); /* Wait RXFE */
+	while (uart->FR & UART_FR_RXFE);
 	return uart->DR & 0xFF;
 }
 
-void
-serial_puts (const char *s)
+void serial_puts (const char *s)
 {
 	while (*s) {
 		serial_putc (*s++);

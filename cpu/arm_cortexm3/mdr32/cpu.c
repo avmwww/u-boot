@@ -29,20 +29,16 @@
  */
 int print_cpuinfo(void)
 {
-	char	buf[4][32];
+	char	buf[2][32];
 
-#if defined(CONFIG_SYS_ARMCORTEXM4)
-	printf("CPU  : %s\n", "STM32F4 (Cortex-M4)");
-#else
-	printf("CPU  : %s\n", "STM32F2 (Cortex-M3)");
-#endif
+	printf("CPU  : MDR32F9Qx (Cortex-M3 %03x), part No: %d\n",
+		(CM3_SCB_REGS->cpuid >> 4) & 0xfff,
+		CM3_SCB_REGS->cpuid & 0xf);
 
 	strmhz(buf[0], clock_get(CLOCK_SYSCLK));
-	strmhz(buf[1], clock_get(CLOCK_HCLK));
-	strmhz(buf[2], clock_get(CLOCK_PCLK1));
-	strmhz(buf[3], clock_get(CLOCK_PCLK2));
-	printf("Freqs: SYSCLK=%sMHz,HCLK=%sMHz,PCLK1=%sMHz,PCLK2=%sMHz\n",
-		buf[0], buf[1], buf[2], buf[3]);
+	strmhz(buf[1], clock_get(CLOCK_HSE));
+	printf("Freqs: SYSCLK=%sMHz,HSE=%sMHz\n",
+		buf[0], buf[1]);
 
 	return 0;
 }

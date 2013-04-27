@@ -60,18 +60,15 @@
 #define CONFIG_ARCH_CPU_INIT
 
 /*
- * Clock configuration (see stm32f2/clock.c for details):
+ * Clock configuration:
  * - use PLL as the system clock;
  * - use HSE as the PLL source;
  * - configure PLL to get 48MHz system clock.
  */
-#define CONFIG_STM32_SYS_CLK_PLL
-#define CONFIG_STM32_PLL_SRC_HSE
-#define CONFIG_STM32_HSE_HZ		8000000	/* 8 MHz */
-#define CONFIG_STM32_PLL_M		25
-#define CONFIG_STM32_PLL_N		240
-#define CONFIG_STM32_PLL_P		2
-#define CONFIG_STM32_PLL_Q		5
+#define CONFIG_MDR32_SYS_CLK_PLL
+#define CONFIG_MDR32_PLL_SRC_HSE
+#define CONFIG_MDR32_HSE_HZ		8000000	/* 8 MHz */
+#define CONFIG_MDR32_PLL_M		6
 
 /*
  * Number of clock ticks in 1 sec
@@ -94,7 +91,7 @@
 #define CONFIG_MEM_NVM_BASE		0x18000000
 #define CONFIG_MEM_NVM_LEN		(1024 * 1024)
 
-#define CONFIG_MEM_RAM_BASE		0x1FFE8000
+#define CONFIG_MEM_RAM_BASE		0x18100000//0x1FFE8000
 #define CONFIG_MEM_RAM_LEN		(20 * 1024)
 #define CONFIG_MEM_RAM_BUF_LEN		(88 * 1024)
 #define CONFIG_MEM_MALLOC_LEN		(16 * 1024)

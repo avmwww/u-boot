@@ -1,7 +1,7 @@
 /*
- * (C) Copyright 2011
+ * (C) Copyright 2013
  *
- * Yuri Tikhonov, Emcraft Systems, yur@emcraft.com
+ * Andrey Mitrofanov, avmwww@gmail.com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -220,7 +220,7 @@ typedef struct
 
 #define SYSCLOCK_MULTIPLIER	(48000000/8000000)
 
-
+#if 0
 /*
  * STM32 Clock configuration is set by the number of CONFIG options.
  *
@@ -405,12 +405,13 @@ typedef struct
  */
 #define STM32_HSE_STARTUP_TIMEOUT	0x0500
 
+#endif
+
 /*
  * Clock values
  */
 static u32 clock_val[CLOCK_END];
 
-#if 0//!defined(CONFIG_STM32_SYS_CLK_HSI)
 /*
  * Set-up clock configuration.
  */
@@ -419,237 +420,9 @@ static void clock_setup(void)
 	u32	val;
 	int	i;
 
-	/*
-	 * Enable HSE, and wait it becomes ready
-	 */
-	STM32_RCC->cr |= STM32_RCC_CR_HSEON;
-	for (i = 0; i < STM32_HSE_STARTUP_TIMEOUT; i++) {
-		if (STM32_RCC->cr & STM32_RCC_CR_HSERDY)
-			break;
-	}
-
-	if (!(STM32_RCC->cr & STM32_RCC_CR_HSERDY)) {
-		/*
-		 * Have no HSE clock
-		 */
-		goto out;
-	}
-
-	val = STM32_RCC->cfgr;
-
-	/*
-	 * HCLK = SYSCLK / 1
-	 */
-	val &= ~(STM32_RCC_CFGR_HPRE_MSK << STM32_RCC_CFGR_HPRE_BIT);
-	val |= STM32_RCC_CFGR_HPRE_DIVNO << STM32_RCC_CFGR_HPRE_BIT;
-
-	/*
-	 * PCLK2 = HCLK / 2
-	 */
-	val &= ~(STM32_RCC_CFGR_PPRE2_MSK << STM32_RCC_CFGR_PPRE2_BIT);
-	val |= STM32_RCC_CFGR_PPRE2_DIV2 << STM32_RCC_CFGR_PPRE2_BIT;
-
-	/*
-	 * PCLK1 = HCLK / 4
-	 */
-	val &= ~(STM32_RCC_CFGR_PPRE1_MSK << STM32_RCC_CFGR_PPRE1_BIT);
-	val |= STM32_RCC_CFGR_PPRE1_DIV4 << STM32_RCC_CFGR_PPRE1_BIT;
-
-	STM32_RCC->cfgr = val;
-
-# if defined(CONFIG_STM32_SYS_CLK_PLL)
-	/*
-	 * Configure the main PLL
-	 */
-#  if defined(CONFIG_STM32_PLL_SRC_HSE)
-	val = STM32_RCC_PLLCFGR_HSESRC;
-#  else
-	val = 0;
-#  endif
-
-	val |= CONFIG_STM32_PLL_M << STM32_RCC_PLLCFGR_PLLM_BIT;
-	val |= CONFIG_STM32_PLL_N << STM32_RCC_PLLCFGR_PLLN_BIT;
-	val |= ((CONFIG_STM32_PLL_P >> 1) - 1) << STM32_RCC_PLLCFGR_PLLP_BIT;
-	val |= CONFIG_STM32_PLL_Q << STM32_RCC_PLLCFGR_PLLQ_BIT;
-
-	STM32_RCC->pllcfgr = val;
-
-	/*
-	 * Enable the main PLL, and wait until main PLL becomes ready.
-	 * Note: we wait infinitely here, since the max time necessary for
-	 * PLL to lock is probably not a constant. There's no timeout here in
-	 * STM lib code as well.
-	 */
-	STM32_RCC->cr |= STM32_RCC_CR_PLLON;
-	while (STM32_RCC->cr & STM32_RCC_CR_PLLRDY);
-
-	/*
-	 * Select PLL as system source if it's setup OK, and HSE otherwise
-	 */
-	if (!(STM32_RCC->cr & STM32_RCC_CR_PLLRDY))
-		val = STM32_RCC_CFGR_SWS_PLL;
-	else
-		val = STM32_RCC_CFGR_SWS_HSE;
-# else
-	/*
-	 * Select HSE as system source
-	 */
-	val = STM32_RCC_CFGR_SWS_HSE;
-# endif /* CONFIG_STM32_SYS_CLK_PLL */
-
-	/*
-	 * Configure Flash prefetch, Instruction cache, and wait
-	 * latency.
-	 */
-	envm_config(STM32_FLASH_WS);
-
-	/*
-	 * Change system clock source, and wait (infinite!) till it done
-	 */
-	STM32_RCC->cfgr &= ~(STM32_RCC_CFGR_SW_MSK << STM32_RCC_CFGR_SW_BIT);
-	STM32_RCC->cfgr |= val << STM32_RCC_CFGR_SW_BIT;
-	while ((STM32_RCC->cfgr & (STM32_RCC_CFGR_SWS_MSK <<
-				   STM32_RCC_CFGR_SWS_BIT)) !=
-	       (val << STM32_RCC_CFGR_SWS_BIT));
-out:
-	return;
-}
-#endif /* CONFIG_STM32_SYS_CLK_HSI */
-
-static void inline ext_ram_init(void)
-{
-	// Setup external RAM
-	RST_CLK->PER_CLOCK |= \
-				RST_CLK_PER_CLOCK_PORTA | \
-				RST_CLK_PER_CLOCK_PORTB | \
-				RST_CLK_PER_CLOCK_PORTC | \
-				RST_CLK_PER_CLOCK_PORTD | \
-				RST_CLK_PER_CLOCK_PORTE | \
-				RST_CLK_PER_CLOCK_PORTF; // Clock periferial devs
-	// Set funct and power, digital
-	#define SETUP_PORT(PORT,F,A,P) (PORT->FUNC = F, PORT->ANALOG = A, PORT->PWR = P)
-	#define SETUP_PORT_MAIN(PORT) SETUP_PORT(PORT,0x55555555,0xFFFF,0xFFFFFFFF)
-	SETUP_PORT_MAIN(PORTA);
-	SETUP_PORT_MAIN(PORTB);
-	SETUP_PORT(PORTC,0xAA001554,0xFC7E,0xF0F03FFC);
-	PORTC->OE   = 0x0C00;
-	PORTC->RXTX = 0x0000;
-	SETUP_PORT(PORTD,0xC3FFE800,0x9FFF,0x03FFFC00);
-	SETUP_PORT(PORTE,0x55555555,0xFFFF,0xFFFFFFFF);
-	SETUP_PORT(PORTF,0x5555555F,0xFFFF,0xFFFFFFFF);
-
-
-	RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_EXT_BUS;
-	EXT_BUS_CNTRL->EXT_BUS_CONTROL=EXT_BUS_CNTRL_EXT_BUS_CONTROL_RAM | \
-		 (0xF<<EXT_BUS_CNTRL_EXT_BUS_CONTROL_WAIT_STATE_Pos);
-	/* Enable clock to watchdog timer */
-	RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_IWDT;
-}
-
-
-/*
- * Initialize the reference clocks.
- */
-void clock_init(void)
-{
-#if 0
-	static u32 apbahb_presc_tbl[] = {0, 0, 0, 0, 1, 2, 3, 4,
-					 1, 2, 3, 4, 6, 7, 8, 9};
-
-	u32 tmp, presc, pllvco, pllp, pllm;
-
-#if !defined(CONFIG_STM32_SYS_CLK_HSI)
-	/*
-	 * Set clocks to cfg, which is differs from the poweron default
-	 */
-	clock_setup();
-#else
-	/*
-	 * For consistency with !HSI configs, enable prefetch and cache
-	 */
-	envm_config(STM32_FLASH_WS);
-#endif
-
-	/*
-	 * Get SYSCLK
-	 */
-	tmp  = STM32_RCC->cfgr >> STM32_RCC_CFGR_SWS_BIT;
-	tmp &= STM32_RCC_CFGR_SWS_MSK;
-	switch (tmp) {
-	case STM32_RCC_CFGR_SWS_HSI:
-		/* HSI used as system clock source */
-		clock_val[CLOCK_SYSCLK] = STM32_HSI_HZ;
-		break;
-	case STM32_RCC_CFGR_SWS_HSE:
-		/* HSE used as system clock source */
-		clock_val[CLOCK_SYSCLK] = CONFIG_STM32_HSE_HZ;
-		break;
-	case STM32_RCC_CFGR_SWS_PLL:
-		/* PLL used as system clock source */
-		/*
-		 * PLL_VCO = (HSE_VALUE or HSI_VALUE / PLLM) * PLLN
-		 * SYSCLK = PLL_VCO / PLLP
-		 */
-		pllm  = STM32_RCC->pllcfgr >> STM32_RCC_PLLCFGR_PLLM_BIT;
-		pllm &= STM32_RCC_PLLCFGR_PLLM_MSK;
-
-		if (STM32_RCC->pllcfgr & STM32_RCC_PLLCFGR_HSESRC) {
-			/* HSE used as PLL clock source */
-			tmp = CONFIG_STM32_HSE_HZ;
-		} else {
-			/* HSI used as PLL clock source */
-			tmp = STM32_HSI_HZ;
-		}
-		pllvco  = STM32_RCC->pllcfgr >> STM32_RCC_PLLCFGR_PLLN_BIT;
-		pllvco &= STM32_RCC_PLLCFGR_PLLN_MSK;
-		pllvco *= tmp / pllm;
-
-		pllp  = STM32_RCC->pllcfgr >> STM32_RCC_PLLCFGR_PLLP_BIT;
-		pllp &= STM32_RCC_PLLCFGR_PLLP_MSK;
-		pllp  = (pllp + 1) * 2;
-
-		clock_val[CLOCK_SYSCLK] = pllvco / pllp;
-		break;
-	default:
-		clock_val[CLOCK_SYSCLK] = STM32_HSI_HZ;
-		break;
-	}
-
-	/*
-	 * Get HCLK
-	 */
-	tmp  = STM32_RCC->cfgr >> STM32_RCC_CFGR_HPRE_BIT;
-	tmp &= STM32_RCC_CFGR_HPRE_MSK;
-	presc = apbahb_presc_tbl[tmp];
-	clock_val[CLOCK_HCLK] = clock_val[CLOCK_SYSCLK] >> presc;
-
-	/*
-	 * Get PCLK1
-	 */
-	tmp  = STM32_RCC->cfgr >> STM32_RCC_CFGR_PPRE1_BIT;
-	tmp &= STM32_RCC_CFGR_PPRE1_MSK;
-	presc = apbahb_presc_tbl[tmp];
-	clock_val[CLOCK_PCLK1] = clock_val[CLOCK_HCLK] >> presc;
-
-	/*
-	 * Get PCLK2
-	 */
-	tmp  = STM32_RCC->cfgr >> STM32_RCC_CFGR_PPRE2_BIT;
-	tmp &= STM32_RCC_CFGR_PPRE2_MSK;
-	presc = apbahb_presc_tbl[tmp];
-	clock_val[CLOCK_PCLK2] = clock_val[CLOCK_HCLK] >> presc;
-
-	/*
-	 * Set SYSTICK. Divider "8" is the SOC hardcoded.
-	 */
-	 clock_val[CLOCK_SYSTICK] = clock_val[CLOCK_HCLK] / 8;
-#endif
-
-        /* Enable HSE generator. */
+	/* Enable HSE generator. */
         RST_CLK->HS_CONTROL = RST_CLK_HS_CONTROL_HSE_ON;
         while (! (RST_CLK->CLOCK_STATUS & RST_CLK_CLOCK_STATUS_HSE_RDY));
-
-	ext_ram_init();
 
         /* Use HSE for CPU_C1 clock. */
         RST_CLK->CPU_CLOCK = (2<<RST_CLK_CPU_CLOCK_CPU_C1_SEL_Pos);
@@ -669,7 +442,88 @@ void clock_init(void)
                                 (2<<RST_CLK_CPU_CLOCK_CPU_C1_SEL_Pos) |
                                 (1<<RST_CLK_CPU_CLOCK_HCLK_SEL_Pos);
 
+	return;
+}
 
+
+/*
+ * Initialize the reference clocks.
+ */
+void clock_init(void)
+{
+	u32 tmp, val, c1, c2, c3, pll_c0;
+	u32 hsi = 8000000;
+	u32 hse = 8000000;
+	u32 lsi = 40000;
+	u32 lse = 32000;
+
+	clock_setup();
+
+        if (RST_CLK->PLL_CONTROL & RST_CLK_PLL_CONTROL_PLL_CPU_ON)
+		pll_c0 = (((RST_CLK->PLL_CONTROL & RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Msk) >> RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos)  + 1) * hse;
+	else
+		pll_c0 = 0;
+
+	/* C1 clock */
+	tmp = (RST_CLK->CPU_CLOCK & RST_CLK_CPU_CLOCK_CPU_C1_SEL_Msk) >> RST_CLK_CPU_CLOCK_CPU_C1_SEL_Pos;
+	switch (tmp) {
+	case 1:
+		c1 = hsi / 2;
+		break;
+	case 2:
+		c1 = hse;
+		break;
+	case 3:
+		c1 = hse / 2;
+		break;
+	default:
+		c1 = hsi;
+		break;
+	}
+
+	/* C2 clock */
+	if (RST_CLK->CPU_CLOCK & RST_CLK_CPU_CLOCK_CPU_C2_SEL)
+		c2 = pll_c0;
+	else
+		c2 = c1;
+
+	/* C3 clock */
+	tmp = (RST_CLK->CPU_CLOCK & RST_CLK_CPU_CLOCK_CPU_C3_SEL_Msk) >>RST_CLK_CPU_CLOCK_CPU_C3_SEL_Pos;
+	if (tmp & 8)
+		c3 = c2 / (((tmp & 7) + 1) << 1);
+	else
+		c3 = c2;
+
+	/* HCLK */
+        tmp = ((RST_CLK->CPU_CLOCK & RST_CLK_CPU_CLOCK_HCLK_SEL_Msk) >> RST_CLK_CPU_CLOCK_HCLK_SEL_Pos);
+	switch (tmp) {
+	case 1:
+		/* CPU_C3 */
+		clock_val[CLOCK_HCLK] = c3;
+		break;
+	case 2:
+		/* LSE */
+		clock_val[CLOCK_HCLK] = lse;
+		break;
+	case 3:
+		/* LSI */
+		clock_val[CLOCK_HCLK] = lsi;
+		break;
+	default:
+		/* HSI*/
+		clock_val[CLOCK_HCLK] = hsi;
+		break;
+	}
+
+	/* SYSCLK */
+	clock_val[CLOCK_SYSCLK] = clock_val[CLOCK_HCLK];
+	/* External clock */
+	clock_val[CLOCK_HSE] = hse;
+
+	/*
+	 * Set SYSTICK. Divider "8" is the SOC hardcoded.
+	 */
+	 clock_val[CLOCK_SYSTICK] = clock_val[CLOCK_HCLK] / 8;
 	return;
 }
 
