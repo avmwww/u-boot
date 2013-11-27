@@ -19,7 +19,6 @@
  */
 
 #include <common.h>
-//#include <asm/arch/hardware.h>
 
 #define UART_FR_RI	0x100
 #define UART_FR_TXFE	0x80
@@ -96,11 +95,15 @@ typedef struct
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#define CONFIG_SYS_MDR32_CONSOLE	UART2_BASE
+#if  (CONFIG_SYS_MDR32_CONSOLE == 2)
+# define CONSOLE_UART_BASE	UART2_BASE
+#elif  (CONFIG_SYS_MDR32_CONSOLE == 1)
+# define CONSOLE_UART_BASE	UART1_BASE
+#else
+# error "CONFIG_SYS_MDR32_CONSOLE wrong or not defined, should be 1 or 2"
+#endif
 
-static struct mdr32_uart *uart = (struct mdr32_uart *)CONFIG_SYS_MDR32_CONSOLE;
-
-//#define uart ((struct mdr32_uart *)CONFIG_SYS_MDR32_CONSOLE)
+static struct mdr32_uart *uart = (struct mdr32_uart *)CONSOLE_UART_BASE;
 
 void serial_setbrg (void)
 {
@@ -128,8 +131,13 @@ int serial_init (void)
 	PORTF->PWR &= ~0b1111;
 	PORTF->PWR |= 0b0101;
 
-	RST_CLK->PER_CLOCK |= 1 << 7;	// вкл. тактирования UART2
-//	RST_CLK->PER_CLOCK |= 1 << 6;	// вкл. тактирования UART1
+#if (CONFIG_SYS_MDR32_CONSOLE == UART2_BASE)
+	/* Enable clock on UART2 */
+	RST_CLK->PER_CLOCK |= 1 << 7;
+#else
+	/* Enable clock on UART1 */
+	RST_CLK->PER_CLOCK |= 1 << 6;
+#endif
 
 	RST_CLK->UART_CLOCK = (1 << 25);
 

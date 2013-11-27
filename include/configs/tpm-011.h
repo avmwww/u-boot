@@ -19,10 +19,6 @@
  * MA 02111-1307 USA
  */
 
-/*
- * Configuration settings for the STMicroelectronic STM3220G-EVAL board.
- */
-
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
@@ -47,12 +43,12 @@
 #define CONFIG_DISPLAY_CPUINFO		1
 #define CONFIG_DISPLAY_BOARDINFO	1
 
-#define CONFIG_SYS_BOARD_REV_STR	"Rev 2.A"
+#define CONFIG_SYS_BOARD_REV_STR	"Rev 1"
 
 /*
  * Monitor prompt
  */
-#define CONFIG_SYS_PROMPT		"STM3220G-EVAL> "
+#define CONFIG_SYS_PROMPT		"TPM-011> "
 
 /*
  * We want to call the CPU specific initialization
@@ -191,22 +187,20 @@
  */
 #define CONFIG_MDR32_SERIAL
 
-//#define CONFIG_STM32_USART_CONSOLE
-#define CONFIG_STM32_USART_PORT		3	/* USART3 */
-#define CONFIG_STM32_USART_TX_IO_PORT	2	/* PORTC */
-#define CONFIG_STM32_USART_RX_IO_PORT	2	/* PORTC */
-#define CONFIG_STM32_USART_TX_IO_PIN	10	/* GPIO10 */
-#define CONFIG_STM32_USART_RX_IO_PIN	11	/* GPIO11 */
+#define CONFIG_SYS_MDR32_CONSOLE	2	/* UART2 */
 
 #define CONFIG_BAUDRATE			115200
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 
-#if 0
 /*
  * Ethernet configuration
  */
 #define CONFIG_NET_MULTI
-#define CONFIG_STM32_ETH
+#define CONFIG_K5600BG1_ETH
+#define CONFIG_K5600BG1_BASE_ADDR	0x60800000
+#define CONFIG_K5600BG1_BASE_ADDR_1	0x61800000
+
+#define CONFIG_CMD_PING
 
 /*
  * Ethernet RX buffers are malloced from the internal SRAM (more precisely,
@@ -216,7 +210,6 @@
  * may be received without processing until overflow happens).
  */
 #define CONFIG_SYS_RX_ETH_BUFFER	4
-#endif
 
 
 /*
@@ -301,8 +294,8 @@
 	"flashaddr=60020000\0"					\
 	"flashboot=run addip;bootm ${flashaddr}\0"		\
 	"ethaddr=C0:B1:3C:88:88:85\0"				\
-	"ipaddr=172.17.4.206\0"					\
-	"serverip=172.17.0.1\0"					\
+	"ipaddr=192.168.12.220\0"					\
+	"serverip=192.168.12.222\0"					\
 	"image=stm32/uImage\0"					\
 	"stdin=serial\0"					\
 	"netboot=tftp ${image};run addip;bootm\0"		\

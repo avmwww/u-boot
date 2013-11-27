@@ -19,7 +19,7 @@
  */
 
 /*
- * Board specific code for the STMicroelectronic STM3220G-EVAL board
+ * Board specific code for the TPM-011 board
  */
 
 #include <common.h>
@@ -395,34 +395,15 @@ out:
 	return rv;
 }
 
-#ifdef CONFIG_STM32_ETH
+#ifdef CONFIG_K5600BG1_ETH
 /*
  * Register ethernet driver
  */
 int board_eth_init(bd_t *bis)
 {
-	return stm32_eth_init(bis);
+	return k5600bg1_eth_init(bis, CONFIG_K5600BG1_BASE_ADDR);
 }
 #endif
-
-void eth_halt(void)
-{
-}
-
-int eth_init(bd_t * bis)
-{
-	return 0;
-}
-
-int eth_send(volatile void *ptr, int len)
-{
-	return 0;
-}
-
-int eth_rx(void)
-{
-	return 0;
-}
 
 /*
  * Initialize internal Flash interface
