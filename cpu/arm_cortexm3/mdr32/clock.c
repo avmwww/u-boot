@@ -520,23 +520,20 @@ void clock_init(void)
 	/* External clock */
 	clock_val[CLOCK_HSE] = hse;
 
-	/*
-	 * Set SYSTICK. Divider "8" is the SOC hardcoded.
-	 */
-	 clock_val[CLOCK_SYSTICK] = clock_val[CLOCK_HCLK] / 8;
+#ifdef CONFIG_ARMCORTEXM3_SYSTICK_CPU
+	clock_val[CLOCK_SYSTICK] = clock_val[CLOCK_HCLK];
+#else
+	clock_val[CLOCK_SYSTICK] = lsi;
+#endif
 	return;
 }
 
 /*
  * Return a clock value for the specified clock.
- * Note that we need this function in RAM because it will be used
- * during self-upgrade of U-boot into eNMV.
  * @param clck          id of the clock
  * @returns             frequency of the clock
  */
-unsigned long  __attribute__((section(".ramcode")))
-	       __attribute__ ((long_call))
-	       clock_get(enum clock clck)
+unsigned long clock_get(enum clock clck)
 {
 	return clock_val[clck];
 }

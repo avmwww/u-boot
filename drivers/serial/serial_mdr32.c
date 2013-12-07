@@ -19,79 +19,27 @@
  */
 
 #include <common.h>
-
-#define UART_FR_RI	0x100
-#define UART_FR_TXFE	0x80
-#define UART_FR_RXFF	0x40
-#define UART_FR_TXFF	0x20
-#define UART_FR_RXFE	0x10
-#define UART_FR_BUSY	0x08
-#define UART_FR_DCD	0x04
-#define UART_FR_DSR	0x02
-#define UART_FR_CTS	0x01
-
-
-#define UART1_BASE	0x40030000
-#define UART2_BASE	0x40038000
-
-#define PORTF_BASE          0x400E8000
-
-#define RST_CLK_BASE        0x40020000
-
-#define     __IO    volatile
+#include <asm/arch/mdr32.h>
 
 struct mdr32_uart
 {
-  __IO uint32_t DR;
-  __IO uint32_t RSR_ECR;
-       uint32_t RESERVED0[4];
-  __IO uint32_t FR;
-       uint32_t RESERVED1;
-  __IO uint32_t ILPR;
-  __IO uint32_t IBRD;
-  __IO uint32_t FBRD;
-  __IO uint32_t LCR_H;
-  __IO uint32_t CR;
-  __IO uint32_t IFLS;
-  __IO uint32_t IMSC;
-  __IO uint32_t RIS;
-  __IO uint32_t MIS;
-  __IO uint32_t ICR;
-  __IO uint32_t DMACR;
+	u32 DR;
+	u32 RSR_ECR;
+	u32 RESERVED0[4];
+	u32 FR;
+	u32 RESERVED1;
+	u32 ILPR;
+	u32 IBRD;
+	u32 FBRD;
+	u32 LCR_H;
+	u32 CR;
+	u32 IFLS;
+	u32 IMSC;
+	u32 RIS;
+	u32 MIS;
+	u32 ICR;
+	u32 DMACR;
 };
-
-typedef struct
-{
-  __IO uint32_t RXTX;
-  __IO uint32_t OE;
-  __IO uint32_t FUNC;
-  __IO uint32_t ANALOG;
-  __IO uint32_t PULL;
-  __IO uint32_t PD;
-  __IO uint32_t PWR;
-  __IO uint32_t GFEN;
-}PORT_TypeDef;
-
-typedef struct
-{
-  __IO uint32_t CLOCK_STATUS;
-  __IO uint32_t PLL_CONTROL;
-  __IO uint32_t HS_CONTROL;
-  __IO uint32_t CPU_CLOCK;
-  __IO uint32_t USB_CLOCK;
-  __IO uint32_t ADC_MCO_CLOCK;
-  __IO uint32_t RTC_CLOCK;
-  __IO uint32_t PER_CLOCK;
-  __IO uint32_t CAN_CLOCK;
-  __IO uint32_t TIM_CLOCK;
-  __IO uint32_t UART_CLOCK;
-  __IO uint32_t SSP_CLOCK;
-}RST_CLK_TypeDef;
-
-
-#define PORTF               ((PORT_TypeDef*)    PORTF_BASE)
-#define RST_CLK             ((RST_CLK_TypeDef*) RST_CLK_BASE)
-
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -103,7 +51,7 @@ DECLARE_GLOBAL_DATA_PTR;
 # error "CONFIG_SYS_MDR32_CONSOLE wrong or not defined, should be 1 or 2"
 #endif
 
-static struct mdr32_uart *uart = (struct mdr32_uart *)CONSOLE_UART_BASE;
+static volatile struct mdr32_uart *uart = (volatile struct mdr32_uart *)CONSOLE_UART_BASE;
 
 void serial_setbrg (void)
 {
@@ -113,32 +61,24 @@ void serial_setbrg (void)
 	uart->CR = 0;
 	/* Set baud rate divisor */
 	uart->IBRD = (divisor / 16 / 4);
-	uart->FBRD = (divisor & 077);
+	uart->FBRD = (divisor & 0x3f);
 
 	/* 8N1, FIFO enabled */
-	uart->LCR_H = (3 << 5);// | 0x10;
+	uart->LCR_H = UART_LCR_H_WLEN(3);
 	/* Enable uart, rx, tx */
-	uart->CR = 0x301;
+	uart->CR = UART_CR_UARTEN | UART_CR_RXE | UART_CR_TXE;
 }
 
 int serial_init (void)
 {
-        /* Set UART2 for debug output. */
-	RST_CLK->PER_CLOCK |= 1 << 29;	// вкл. тактирования PORTF
-	PORTF->FUNC |= 0b1111; 	// переопределенная функция для
-			 	// PF0(UART2_RXD) и PF1(UART2_TXD)
-	PORTF->ANALOG |= 3;	// цифровые выводы
-	PORTF->PWR &= ~0b1111;
-	PORTF->PWR |= 0b0101;
-
-#if (CONFIG_SYS_MDR32_CONSOLE == UART2_BASE)
-	/* Enable clock on UART2 */
-	RST_CLK->PER_CLOCK |= 1 << 7;
+#if (CONFIG_SYS_MDR32_CONSOLE == 2)
+	/* Turn on clock of UART2 */
+	RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_UART2;
 #else
-	/* Enable clock on UART1 */
-	RST_CLK->PER_CLOCK |= 1 << 6;
+	/* Turn on clock of UART1 */
+	RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_UART1;
 #endif
-
+	/* Enable clock on uart  */
 	RST_CLK->UART_CLOCK = (1 << 25);
 
 	serial_setbrg ();

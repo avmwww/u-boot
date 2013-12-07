@@ -50,6 +50,7 @@ void _start(void);
 void default_isr(void);
 
 extern void start_armboot(void);
+extern void cpu_init_crit(void);
 
 #ifdef CONFIG_LPC18XX_NORFLASH_BOOTSTRAP_WORKAROUND
 extern void lpc18xx_norflash_bootstrap_iomux_init(void);
@@ -108,6 +109,9 @@ void
 #endif
 	_start(void)
 {
+#ifndef CONFIG_SKIP_LOWLEVEL_INIT
+	cpu_init_crit();
+#endif
 	/*
 	 * Depending on the config parameter, enable or disable the WDT.
 	 */

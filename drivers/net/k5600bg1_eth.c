@@ -27,7 +27,7 @@
 /*
  * Define DEBUG to enable debug() messages in this module
  */
-//#define DEBUG
+#undef DEBUG
 
 #include <common.h>
 #include <malloc.h>
@@ -38,13 +38,13 @@
 /*
  * Device name
  */
-#define K5600BG1_MAC_NAME			"k5600bg1"
+#define K5600BG1_MAC_NAME			"bg"
 #define FPGA_BASE				0x63800000
 
 #define ETH_RX_DESC_NUM				32
 #define ETH_TX_DESC_NUM				32
 
-#define K56_MAC_TX_TIMEOUT			1000000	/* x 1 usec = 1000 ms */
+#define K56_MAC_TX_TIMEOUT			2 /* sec */
 
 typedef volatile u32 vu32;
 
@@ -144,31 +144,33 @@ struct k56_eth_dev {
 
 static inline void k56_eth_reset(struct k56_eth_dev *mac)
 {
-	int i;
-
 	*((vu32 *)(FPGA_BASE + 0x40)) &= ~(1 << mac->unit);
-	for (i = 0; i < 1000; i++)
-		__asm__ volatile (" nop");
+	udelay(1000);
 	*((vu32 *) (FPGA_BASE + 0x40)) |= 1 << mac->unit;
-	for (i = 0; i < 1000; i++)
-		__asm__ volatile (" nop");
+	udelay(100000);
 }
 
-/*
- * Init
- */
-static s32 k56_eth_init(struct eth_device *dev, bd_t *bd)
+static inline void k56_eth_hw_setup(struct k56_eth_dev *mac)
 {
-	struct k56_eth_dev	*mac = to_k56_eth(dev);
-	vu32			*p;
-	int			i;
+	vu32	*p;
+	int	i;
 
 	k56_eth_reset(mac);
 
+	mac->reg->GCTRL = ETH_GCTRL_ASYNC_MODE | ETH_GCTRL_RD_CLR_STAT;
+
+	mac->reg->MAC_CTRL = ETH_MAC_BCA_EN;//| ETH_MAC_HALFD_EN;
+	mac->reg->CollConfig = ETH_COLLCONFIG_TRYN (15) | ETH_COLLCONFIG_CW (64);
+	mac->reg->MinFrame = 64;
+	mac->reg->MaxFrame = PKTSIZE_ALIGN;
+	mac->reg->IPGTx = ETH_IPG_DEFAULT;
+	mac->reg->INT_MSK = 0;
+
+	mac->reg->PHY_CTRL = ETH_PHYC_TXEN | ETH_PHYC_RXEN |
+			     ETH_PHYC_LINK_PER (12) | ETH_PHYC_DIR; //| ETH_PHYC_HALFD;
+
 	mac->cur_buf_tx = mac->buf_tx;
 	mac->desc_tx_num = mac->desc_rx_num = 0;
-
-	mac->reg->GCTRL = ETH_GCTRL_ASYNC_MODE | ETH_GCTRL_RD_CLR_STAT;
 
 	/* Clear buffer tx/rx, descriptors tx/rx */
 	for (p = mac->buf_rx; p < (vu32 *)mac->reg; p++)
@@ -178,14 +180,18 @@ static s32 k56_eth_init(struct eth_device *dev, bd_t *bd)
 		mac->desc_rx[i].CTRL_STAT =
 			ETH_DESC_RDY | ETH_DESC_IRQ_EN | ((i < (ETH_RX_DESC_NUM - 1)) ? 0 : ETH_DESC_WRAP);
 	}
+	for (i = 0; i < ETH_TX_DESC_NUM; i++)
+		mac->desc_tx[i].CTRL_STAT = 0;
+}
 
-	mac->reg->MAC_CTRL = ETH_MAC_BCA_EN;//| ETH_MAC_HALFD_EN;
-	mac->reg->CollConfig = ETH_COLLCONFIG_TRYN (15) | ETH_COLLCONFIG_CW (64);
-	mac->reg->MinFrame = 64;
-	mac->reg->MaxFrame = PKTSIZE_ALIGN;
-	mac->reg->IPGTx = ETH_IPG_DEFAULT;
+/*
+ * Init
+ */
+static s32 k56_eth_init(struct eth_device *dev, bd_t *bd)
+{
+	struct k56_eth_dev	*mac = to_k56_eth(dev);
 
-	debug("%s: mac is %#x:%#x:%#x:%#x:%#x:%#x.\n", __func__,
+	debug("%s: mac is %02x:%02x:%02x:%02x:%02x:%02x.\n", __func__,
 	      dev->enetaddr[0], dev->enetaddr[1],
 	      dev->enetaddr[2], dev->enetaddr[3],
 	      dev->enetaddr[4], dev->enetaddr[5]);
@@ -197,11 +203,19 @@ static s32 k56_eth_init(struct eth_device *dev, bd_t *bd)
 	mac->reg->MAC_ADDR_T = ((u32) dev->enetaddr[1] << 8)
 			    | (u32) dev->enetaddr[0];
 
-	mac->reg->PHY_CTRL = ETH_PHYC_TXEN | ETH_PHYC_RXEN |
-			   ETH_PHYC_LINK_PER (12) | ETH_PHYC_DIR; //| ETH_PHYC_HALFD;
-	mac->reg->INT_MSK = 0;
-
 	return 0;
+}
+
+/*
+ * Halt MAC
+ */
+static void k56_eth_halt(struct eth_device *dev)
+{
+	struct k56_eth_dev	*mac = to_k56_eth(dev);
+	vu32			*p;
+	int			i;
+
+	debug("eth halt\n");
 }
 
 /*
@@ -210,7 +224,8 @@ static s32 k56_eth_init(struct eth_device *dev, bd_t *bd)
 static s32 k56_eth_send(struct eth_device *dev, volatile void *pkt, s32 len)
 {
 	struct k56_eth_dev	*mac = to_k56_eth(dev);
-	s32			rv, tout;
+	s32			rv;
+	ulong			start;
 	int			i;
 	vu32			*p;
 	u16			*buf;
@@ -253,15 +268,14 @@ static s32 k56_eth_send(struct eth_device *dev, volatile void *pkt, s32 len)
 	/*
 	 * Wait until transmit completes
 	 */
-	tout = K56_MAC_TX_TIMEOUT;
 	rv = -ETIMEDOUT;
-	while (tout-- > 0) {
-		if (d->CTRL_STAT & ETH_DESC_RDY)
-			udelay(1);
-		else {
-			tout = 0;
+	start = get_timer(0);
+	while (get_timer(start) < K56_MAC_TX_TIMEOUT * CONFIG_SYS_HZ) {
+		if (!(d->CTRL_STAT & ETH_DESC_RDY)) {
 			rv = 0;
+			break;
 		}
+		udelay(1);
 	}
 	if (rv != 0) {
 		printf("%s: timeout.\n", __func__);
@@ -274,7 +288,6 @@ static s32 k56_eth_send(struct eth_device *dev, volatile void *pkt, s32 len)
 	rv = 0;
 out:
 	return rv;
-
 }
 
 /*
@@ -283,7 +296,6 @@ out:
 static s32 k56_eth_recv(struct eth_device *dev)
 {
 	struct k56_eth_dev	*mac = to_k56_eth(dev);
-	u32	len;
 	int i;
 	EthDescTypeDef *d;
 	unsigned int pktlen;
@@ -291,7 +303,6 @@ static s32 k56_eth_recv(struct eth_device *dev)
 	vu32 *p;
 	u16 *buf;
 
-	debug("eth recv\n");
 	while (1) {
 		d = &mac->desc_rx[mac->desc_rx_num];
 		pktlen = (u16)d->LEN;
@@ -324,20 +335,11 @@ static s32 k56_eth_recv(struct eth_device *dev)
 		/*
 		 * Pass frame upper
 		 */
+		debug("eth recv %d bytes\n", pktlen);
 		NetReceive(mac->rx_buf, pktlen);
 	}
 
 	return 0;
-}
-
-/*
- * Halt MAC
- */
-static void k56_eth_halt(struct eth_device *dev)
-{
-	struct k56_eth_dev	*mac = to_k56_eth(dev);
-	debug("eth halt\n");
-	k56_eth_reset(mac);
 }
 
 /*
@@ -352,8 +354,8 @@ s32 k5600bg1_eth_init(bd_t *bd, int base_addr)
 
 	mac = malloc(sizeof(struct k56_eth_dev));
 	if (!mac) {
-		printf("Error: failed to allocate %dB of memory for %s\n",
-			sizeof(struct k56_eth_dev), K5600BG1_MAC_NAME);
+		printf("Error: failed to allocate %dB of memory for k5600bg1\n",
+			sizeof(struct k56_eth_dev));
 		rv = -ENOMEM;
 		goto out;
 	}
@@ -373,6 +375,7 @@ s32 k5600bg1_eth_init(bd_t *bd, int base_addr)
 
 	mac->unit = net_dev_id++;
 	sprintf(netdev->name, "%s%d", K5600BG1_MAC_NAME, mac->unit);
+	k56_eth_hw_setup(mac);
 
 	netdev->init = k56_eth_init;
 	netdev->halt = k56_eth_halt;

@@ -25,56 +25,6 @@
 #ifndef _MACH_MDR32_H_
 #define _MACH_MDR32_H_
 
-/******************************************************************************
- * Peripheral memory map
- ******************************************************************************/
-
-#define STM32_PERIPH_BASE	0x40000000
-#define STM32_APB1PERIPH_BASE	(STM32_PERIPH_BASE + 0x00000000)
-#define STM32_APB2PERIPH_BASE	(STM32_PERIPH_BASE + 0x00010000)
-#define STM32_AHB1PERIPH_BASE	(STM32_PERIPH_BASE + 0x00020000)
-#define STM32_AHB2PERIPH_BASE	(STM32_PERIPH_BASE + 0x10000000)
-
-/******************************************************************************
- * Reset and Clock Control
- ******************************************************************************/
-
-/*
- * RCC register map
- */
-struct stm32_rcc_regs {
-	u32	cr;		/* RCC clock control			      */
-	u32	pllcfgr;	/* RCC PLL configuration		      */
-	u32	cfgr;		/* RCC clock configuration		      */
-	u32	cir;		/* RCC clock interrupt			      */
-	u32	ahb1rstr;	/* RCC AHB1 peripheral reset		      */
-	u32	ahb2rstr;	/* RCC AHB2 peripheral reset		      */
-	u32	ahb3rstr;	/* RCC AHB3 peripheral reset		      */
-	u32	rsv0;
-	u32	apb1rstr;	/* RCC APB1 peripheral reset		      */
-	u32	apb2rstr;	/* RCC APB2 peripheral reset		      */
-	u32	rsv1[2];
-	u32	ahb1enr;	/* RCC AHB1 peripheral clock enable	      */
-	u32	ahb2enr;	/* RCC AHB2 peripheral clock enable	      */
-	u32	ahb3enr;	/* RCC AHB3 peripheral clock enable	      */
-	u32	rsv2;
-	u32	apb1enr;	/* RCC APB1 peripheral clock enable	      */
-	u32	apb2enr;	/* RCC APB2 peripheral clock enable	      */
-	u32	rsv3[2];
-	u32	ahb1lpenr;	/* RCC AHB1 periph clk enable in low pwr mode */
-	u32	ahb2lpenr;	/* RCC AHB2 periph clk enable in low pwr mode */
-	u32	ahb3lpenr;	/* RCC AHB3 periph clk enable in low pwr mode */
-	u32	rsv4;
-	u32	apb1lpenr;	/* RCC APB1 periph clk enable in low pwr mode */
-	u32	apb2lpenr;	/* RCC APB2 periph clk enable in low pwr mode */
-	u32	rsv5[2];
-	u32	bdcr;		/* RCC Backup domain control		      */
-	u32	csr;		/* RCC clock control & status		      */
-	u32	rsv6[2];
-	u32	sscgr;		/* RCC spread spectrum clock generation	      */
-	u32	plli2scfgr;	/* RCC PLLI2S configuration		      */
-};
-
 /*
  * Clocks enumeration
  */
@@ -86,28 +36,103 @@ enum clock {
 	CLOCK_END		/* for internal usage			      */
 };
 
-/*
- * RCC registers base
- */
-#define STM32_RCC_BASE			(STM32_AHB1PERIPH_BASE + 0x3800)
-#define STM32_RCC			((volatile struct stm32_rcc_regs *) \
-					STM32_RCC_BASE)
-
-/******************************************************************************
- * FIXME: get rid of this
- ******************************************************************************/
-
-/*
- * Return a clock value for the specified clock.
- * Note that we need this function in RAM because it will be used
- * during self-upgrade of U-boot into eNMV.
- * @param clck          id of the clock
- * @returns             frequency of the clock
- */
-unsigned long  __attribute__((section(".ramcode")))
-	       __attribute__ ((long_call))
-	       clock_get(enum clock clck);
+unsigned long clock_get(enum clock clck);
 
 #define PAGE_SIZE	4096
+
+/*
+ * MDR32 regsters
+ */
+struct mdr32_rst_clk {
+	u32 CLOCK_STATUS;
+	u32 PLL_CONTROL;
+	u32 HS_CONTROL;
+	u32 CPU_CLOCK;
+	u32 USB_CLOCK;
+	u32 ADC_MCO_CLOCK;
+	u32 RTC_CLOCK;
+	u32 PER_CLOCK;
+	u32 CAN_CLOCK;
+	u32 TIM_CLOCK;
+	u32 UART_CLOCK;
+	u32 SSP_CLOCK;
+};
+
+#define RST_CLK_BASE			0x40020000
+#define RST_CLK				((volatile struct mdr32_rst_clk *)RST_CLK_BASE)
+
+#define RST_CLK_PER_CLOCK_CAN1		(1 << 0)
+#define RST_CLK_PER_CLOCK_CAN2		(1 << 1)
+#define RST_CLK_PER_CLOCK_USB		(1 << 2)
+#define RST_CLK_PER_CLOCK_EEPROM	(1 << 3)
+#define RST_CLK_PER_CLOCK_RSTCLK	(1 << 4)
+#define RST_CLK_PER_CLOCK_DMA		(1 << 5)
+#define RST_CLK_PER_CLOCK_UART1		(1 << 6)
+#define RST_CLK_PER_CLOCK_UART2		(1 << 7)
+#define RST_CLK_PER_CLOCK_SSP1		(1 << 8)
+#define RST_CLK_PER_CLOCK_I2C1		(1 << 10)
+#define RST_CLK_PER_CLOCK_POWER		(1 << 11)
+#define RST_CLK_PER_CLOCK_WWDT		(1 << 12)
+#define RST_CLK_PER_CLOCK_IWDT		(1 << 13)
+#define RST_CLK_PER_CLOCK_TIMER1	(1 << 14)
+#define RST_CLK_PER_CLOCK_TIMER2	(1 << 15)
+#define RST_CLK_PER_CLOCK_TIMER3	(1 << 16)
+#define RST_CLK_PER_CLOCK_ADC		(1 << 17)
+#define RST_CLK_PER_CLOCK_DAC		(1 << 18)
+#define RST_CLK_PER_CLOCK_COMP		(1 << 19)
+#define RST_CLK_PER_CLOCK_SSP2		(1 << 20)
+#define RST_CLK_PER_CLOCK_PORTA		(1 << 21)
+#define RST_CLK_PER_CLOCK_PORTB		(1 << 22)
+#define RST_CLK_PER_CLOCK_PORTC		(1 << 23)
+#define RST_CLK_PER_CLOCK_PORTD		(1 << 24)
+#define RST_CLK_PER_CLOCK_PORTE		(1 << 25)
+#define RST_CLK_PER_CLOCK_BKP		(1 << 27)
+#define RST_CLK_PER_CLOCK_PORTF		(1 << 29)
+#define RST_CLK_PER_CLOCK_EXT_BUS	(1 << 30)
+
+#define PORTA_BASE		0x400A8000
+#define PORTB_BASE		0x400B0000
+#define PORTC_BASE		0x400B8000
+#define PORTD_BASE		0x400C0000
+#define PORTE_BASE		0x400C8000
+#define PORTF_BASE		0x400E8000
+
+
+/*
+ * uart
+ */
+#define UART1_BASE		0x40030000
+#define UART2_BASE		0x40038000
+
+#define UART_FR_RI		0x100
+#define UART_FR_TXFE		0x80
+#define UART_FR_RXFF		0x40
+#define UART_FR_TXFF		0x20
+#define UART_FR_RXFE		0x10
+#define UART_FR_BUSY		0x08
+#define UART_FR_DCD		0x04
+#define UART_FR_DSR		0x02
+#define UART_FR_CTS		0x01
+
+#define UART_LCR_H_BRK		0x01
+#define UART_LCR_H_PEN		0x02
+#define UART_LCR_H_EPS		0x04
+#define UART_LCR_H_STP2		0x08
+#define UART_LCR_H_FEN		0x010
+#define UART_LCR_H_WLEN(x)	((x & 3) << 5)
+#define UART_LCR_H_SPS		0x080
+
+#define UART_CR_UARTEN		0x01
+#define UART_CR_SIREN		0x02
+#define UART_CR_SIRLP		0x04
+#define UART_CR_LBE		0x080
+#define UART_CR_TXE		0x0100
+#define UART_CR_RXE		0x0200
+#define UART_CR_DTR		0x400
+#define UART_CR_RTS		0x800
+#define UART_CR_Out1		0x1000
+#define UART_CR_Out2		0x2000
+#define UART_CR_RTSE		0x4000
+#define UART_CR_CTSE		0x8000
 
 #endif /* _MACH_MDR32_H_ */

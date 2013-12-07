@@ -50,6 +50,9 @@
  */
 #define CONFIG_SYS_PROMPT		"TPM-011> "
 
+#define CONFIG_CMDLINE_EDITING		1	/* add command line history */
+#define CONFIG_COMMAND_HISTORY		1
+
 /*
  * We want to call the CPU specific initialization
  */
@@ -65,11 +68,15 @@
 #define CONFIG_MDR32_PLL_SRC_HSE
 #define CONFIG_MDR32_HSE_HZ		8000000	/* 8 MHz */
 #define CONFIG_MDR32_PLL_M		6
+#define	CONFIG_SYS_CPUCLOCK		(CONFIG_MDR32_HSE_HZ * CONFIG_MDR32_PLL_M)
 
 /*
  * Number of clock ticks in 1 sec
  */
 #define CONFIG_SYS_HZ			1000
+
+/* Source for SYSTICK Internal RC generator HSI (8 MHz) */
+#define CONFIG_ARMCORTEXM3_SYSTICK_CPU
 
 /*
  * Enable/disable h/w watchdog
@@ -84,11 +91,11 @@
 /*
  * Memory layout configuration
  */
-#define CONFIG_MEM_NVM_BASE		0x18000000
-#define CONFIG_MEM_NVM_LEN		(1024 * 1024)
+#define CONFIG_MEM_NVM_BASE		0x08000000//0x18000000
+#define CONFIG_MEM_NVM_LEN		(128 * 1024)
 
-#define CONFIG_MEM_RAM_BASE		0x18100000//0x1FFE8000
-#define CONFIG_MEM_RAM_LEN		(20 * 1024)
+#define CONFIG_MEM_RAM_BASE		0x18020000//0x1FFE8000
+#define CONFIG_MEM_RAM_LEN		(64*1024)//(20 * 1024)
 #define CONFIG_MEM_RAM_BUF_LEN		(88 * 1024)
 #define CONFIG_MEM_MALLOC_LEN		(16 * 1024)
 #define CONFIG_MEM_STACK_LEN		(4 * 1024)
@@ -118,39 +125,6 @@
 //FSMC_NOR_PSRAM_CS_ADDR(CONFIG_SYS_RAM_CS)
 
 #undef CONFIG_LCD
-#ifdef CONFIG_LCD
-#define LCD_BPP				LCD_COLOR16
-#define CONFIG_BMP_16BPP		1
-#define CONFIG_SPLASH_SCREEN		1
-#define CONFIG_CMD_BMP
-#define CONFIG_FB_ADDR				\
-	(CONFIG_SYS_RAM_BASE + CONFIG_SYS_RAM_SIZE - \
-		roundup(calc_fbsize(), PAGE_SIZE))
-#define CONFIG_LCD_CS			3
-#define CONFIG_LCD_FSMC_BCR			\
-	STM32_FSMC_BCR_MBKEN |			\
-	STM32_FSMC_BCR_WREN |			\
-	(STM32_FSMC_BCR_MWID_16 << STM32_FSMC_BCR_MWID_BIT)
-#define CONFIG_LCD_FSMC_BTR			\
-	(1 << STM32_FSMC_BTR_ADDRST_BIT) |	\
-	(0 << STM32_FSMC_BTR_ADDHOLD_BIT) |	\
-	(9 << STM32_FSMC_BTR_DATAST_BIT) |	\
-	(0 << STM32_FSMC_BTR_BUSTURN_BIT) |	\
-	(0 << STM32_FSMC_BTR_CLKDIV_BIT) |	\
-	(0 << STM32_FSMC_BTR_DATLAT_BIT) |	\
-	STM32_FSMC_BWTR_ACCMOD_A
-#define CONFIG_LCD_FSMC_BWTR			\
-	(1 << STM32_FSMC_BWTR_ADDRST_BIT) |	\
-	(0 << STM32_FSMC_BWTR_ADDHOLD_BIT) |	\
-	(9 << STM32_FSMC_BWTR_DATAST_BIT) |	\
-	(0 << STM32_FSMC_BWTR_CLKDIV_BIT) |	\
-	(0 << STM32_FSMC_BWTR_DATLAT_BIT) |	\
-	STM32_FSMC_BWTR_ACCMOD_A
-#define CONFIG_FSMC_NOR_PSRAM_CS3_ENABLE
-#define CONFIG_LCD_ILI932x
-#define CONFIG_LCD_ILI932x_BASE		FSMC_NOR_PSRAM_CS_ADDR(CONFIG_LCD_CS)
-#define CONFIG_LCD_ILI932x_DOUBLE_BUFFER
-#endif
 
 /*
  * Configuration of the external Flash memory
@@ -164,6 +138,12 @@
 
 #define CONFIG_SYS_FLASH_BANK1_BASE	FSMC_NOR_PSRAM_CS_ADDR(CONFIG_SYS_FLASH_CS)
 
+#define CONFIG_SYS_NO_FLASH
+#define CONFIG_ENV_IS_NOWHERE
+#define CONFIG_ENV_SIZE			(4 * 1024)
+
+#undef CONFIG_FLASH_CFI_DRIVER
+#if 0
 #define CONFIG_SYS_FLASH_CFI		1
 #define CONFIG_FLASH_CFI_DRIVER		1
 #define CONFIG_SYS_FLASH_CFI_WIDTH	FLASH_CFI_16BIT
@@ -172,15 +152,17 @@
 #define CONFIG_SYS_MAX_FLASH_SECT	128
 #define CONFIG_SYS_FLASH_CFI_AMD_RESET	1
 #define CONFIG_SYS_FLASH_PROTECTION	1
+#endif
 
+#if 0
 /*
  * Store env in memory only
  */
 #define CONFIG_ENV_IS_IN_FLASH
-#define CONFIG_ENV_SIZE			(4 * 1024)
 #define CONFIG_ENV_ADDR			CONFIG_SYS_FLASH_BANK1_BASE
 #define CONFIG_INFERNO			1
 #define CONFIG_ENV_OVERWRITE		1
+#endif
 
 /*
  * Serial console configuration
@@ -200,7 +182,6 @@
 #define CONFIG_K5600BG1_BASE_ADDR	0x60800000
 #define CONFIG_K5600BG1_BASE_ADDR_1	0x61800000
 
-#define CONFIG_CMD_PING
 
 /*
  * Ethernet RX buffers are malloced from the internal SRAM (more precisely,
@@ -258,7 +239,8 @@
 #undef CONFIG_CMD_IMLS
 #undef CONFIG_CMD_LOADS
 #undef CONFIG_CMD_MISC
-//#define CONFIG_CMD_NET
+#define CONFIG_CMD_NET
+#define CONFIG_CMD_PING
 #undef CONFIG_CMD_NFS
 #undef CONFIG_CMD_SOURCE
 #undef CONFIG_CMD_XIMG
