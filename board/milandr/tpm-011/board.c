@@ -204,20 +204,7 @@ struct mdr32_eeprom {
 #define EXT_BUS_CNTRL       ((volatile struct mdr32_ext_bus_control*)EXT_BUS_CNTRL_BASE)
 
 
-
 #define SYSCLOCK_MULTIPLIER		(48000000/8000000)
-
-
-
-#if (CONFIG_NR_DRAM_BANKS > 0)
-/*
- * Check if RAM configured
- */
-# if !defined(CONFIG_SYS_RAM_CS) || !defined(CONFIG_SYS_FSMC_PSRAM_BCR) ||     \
-     !defined(CONFIG_SYS_FSMC_PSRAM_BTR)
-#  error "Incorrect PSRAM FSMC configuration."
-# endif
-#endif /* CONFIG_NR_DRAM_BANKS */
 
 DECLARE_GLOBAL_DATA_PTR;
 

@@ -97,42 +97,8 @@ struct mdr32_rst_clk {
 #define PORTE_BASE		0x400C8000
 #define PORTF_BASE		0x400E8000
 
-
-/*
- * uart
- */
 #define UART1_BASE		0x40030000
 #define UART2_BASE		0x40038000
 
-#define UART_FR_RI		0x100
-#define UART_FR_TXFE		0x80
-#define UART_FR_RXFF		0x40
-#define UART_FR_TXFF		0x20
-#define UART_FR_RXFE		0x10
-#define UART_FR_BUSY		0x08
-#define UART_FR_DCD		0x04
-#define UART_FR_DSR		0x02
-#define UART_FR_CTS		0x01
-
-#define UART_LCR_H_BRK		0x01
-#define UART_LCR_H_PEN		0x02
-#define UART_LCR_H_EPS		0x04
-#define UART_LCR_H_STP2		0x08
-#define UART_LCR_H_FEN		0x010
-#define UART_LCR_H_WLEN(x)	((x & 3) << 5)
-#define UART_LCR_H_SPS		0x080
-
-#define UART_CR_UARTEN		0x01
-#define UART_CR_SIREN		0x02
-#define UART_CR_SIRLP		0x04
-#define UART_CR_LBE		0x080
-#define UART_CR_TXE		0x0100
-#define UART_CR_RXE		0x0200
-#define UART_CR_DTR		0x400
-#define UART_CR_RTS		0x800
-#define UART_CR_Out1		0x1000
-#define UART_CR_Out2		0x2000
-#define UART_CR_RTSE		0x4000
-#define UART_CR_CTSE		0x8000
 
 #endif /* _MACH_MDR32_H_ */
