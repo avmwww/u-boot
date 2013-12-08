@@ -44,7 +44,7 @@
 #define ETH_RX_DESC_NUM				32
 #define ETH_TX_DESC_NUM				32
 
-#define K56_MAC_TX_TIMEOUT			2 /* sec */
+#define K56_MAC_TX_TIMEOUT			1 /* sec */
 
 typedef volatile u32 vu32;
 
@@ -211,10 +211,11 @@ static s32 k56_eth_init(struct eth_device *dev, bd_t *bd)
  */
 static void k56_eth_halt(struct eth_device *dev)
 {
+#if 0
 	struct k56_eth_dev	*mac = to_k56_eth(dev);
 	vu32			*p;
 	int			i;
-
+#endif
 	debug("eth halt\n");
 }
 
@@ -291,6 +292,35 @@ out:
 }
 
 /*
+ *
+ */
+static int k56_check_rdy_desc(struct k56_eth_dev *mac)
+{
+	int i;
+	EthDescTypeDef *d;
+	u16 s;
+	vu32 *p;
+	unsigned int desc_rx_num = mac->desc_rx_num;
+
+	for (i = 0; i < ETH_RX_DESC_NUM; i++) {
+		d = &mac->desc_rx[desc_rx_num];
+		s = d->CTRL_STAT;
+		if (!(s & ETH_DESC_RDY)) {
+			/* Ready descriptor */
+			d = &mac->desc_rx[mac->desc_rx_num];
+			s = d->CTRL_STAT;
+			if (s & ETH_DESC_RDY) {
+				/* Set only if current descriptor is not set */
+				mac->desc_rx_num = desc_rx_num;
+				return 1;
+			}
+		}
+		desc_rx_num = (desc_rx_num + 1) & (ETH_RX_DESC_NUM - 1);
+	}
+	return 0;
+}
+
+/*
  * Process received frames (if any)
  */
 static s32 k56_eth_recv(struct eth_device *dev)
@@ -298,19 +328,25 @@ static s32 k56_eth_recv(struct eth_device *dev)
 	struct k56_eth_dev	*mac = to_k56_eth(dev);
 	int i;
 	EthDescTypeDef *d;
-	unsigned int pktlen;
+	unsigned int pktlen = 0;
 	u16 s;
 	vu32 *p;
 	u16 *buf;
 
 	while (1) {
 		d = &mac->desc_rx[mac->desc_rx_num];
-		pktlen = (u16)d->LEN;
 		s = d->CTRL_STAT;
 		/* no packets are available */
-		if (s & ETH_DESC_RDY)
-			break;
+		if (s & ETH_DESC_RDY) {
+			if (pktlen)
+				break;
+			if (k56_check_rdy_desc(mac) == 0)
+				break;
+			d = &mac->desc_rx[mac->desc_rx_num];
+			s = d->CTRL_STAT;
+		}
 
+		pktlen = (u16)d->LEN;
 		if (pktlen > sizeof(mac->rx_buf))
 			pktlen = sizeof(mac->rx_buf);
 

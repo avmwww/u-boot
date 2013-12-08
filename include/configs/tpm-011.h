@@ -132,20 +132,12 @@
 #define CONFIG_SYS_FLASH_BANK1_BASE	0x10000000
 #define CONFIG_SYS_FLASH_BASE		CONFIG_SYS_FLASH_BANK1_BASE
 
-#if 0
-#define CONFIG_SYS_NO_FLASH
-#define CONFIG_ENV_IS_NOWHERE
-#endif
-
-#define CONFIG_ENV_SIZE			(4 * 1024)
-
-#undef CONFIG_FLASH_CFI_DRIVER
 #define CONFIG_SYS_FLASH_CFI		1
 #define CONFIG_FLASH_CFI_DRIVER		1
-#define CONFIG_SYS_FLASH_CFI_WIDTH	FLASH_CFI_16BIT
+#define CONFIG_SYS_FLASH_CFI_WIDTH	FLASH_CFI_8BIT
 #define CONFIG_SYS_FLASH_BANKS_LIST	{ CONFIG_SYS_FLASH_BANK1_BASE }
 #define CONFIG_SYS_MAX_FLASH_BANKS	1
-#define CONFIG_SYS_MAX_FLASH_SECT	128
+#define CONFIG_SYS_MAX_FLASH_SECT	64
 #define CONFIG_SYS_FLASH_CFI_AMD_RESET	1
 #define CONFIG_SYS_FLASH_PROTECTION	1
 
@@ -153,10 +145,10 @@
  * Store env in memory only
  */
 #define CONFIG_ENV_IS_IN_FLASH
-#define CONFIG_ENV_SECT_SIZE		0x40000
-#define CONFIG_ENV_OFFSET		0xfc0000
-//#define CONFIG_ENV_ADDR			CONFIG_SYS_FLASH_BANK1_BASE
-//#define CONFIG_INFERNO			1
+/*#define CONFIG_ENV_SECT_SIZE		0x40000 */
+#define CONFIG_ENV_OFFSET		0x7C0000 /* fpga have bug: only half of eeprom may be accessed */
+#define CONFIG_ENV_SIZE			(4 * 1024)
+#define CONFIG_INFERNO			0x40000
 #define CONFIG_ENV_OVERWRITE		1
 
 /*
@@ -266,7 +258,7 @@
  * Short-cuts to some useful commands (macros)
  */
 #define CONFIG_EXTRA_ENV_SETTINGS				\
-	"loadaddr=0x64000000\0"					\
+	"loadaddr=0x18000000\0"					\
 	"addip=setenv bootargs ${bootargs} ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}:${hostname}:eth0:off\0"				\
 	"flashaddr=60020000\0"					\
 	"flashboot=run addip;bootm ${flashaddr}\0"		\
