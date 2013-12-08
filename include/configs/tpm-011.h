@@ -169,6 +169,14 @@
 #define CONFIG_K5600BG1_BASE_ADDR	0x60800000
 #define CONFIG_K5600BG1_BASE_ADDR_1	0x61800000
 
+#define k56_eth_reset(u)						\
+	do {								\
+		*((volatile u32 *)(FPGA_BASE + 0x40)) &= ~(1 << u);	\
+		udelay(1000);						\
+		*((volatile u32 *) (FPGA_BASE + 0x40)) |= 1 << u;	\
+		udelay(100000);						\
+	} while (0)
+
 
 /*
  * Ethernet RX buffers are malloced from the internal SRAM (more precisely,

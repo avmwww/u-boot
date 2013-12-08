@@ -27,9 +27,6 @@
 
 #include <asm/arch/mdr32.h>
 
-#define RST_CLK_BASE        0x40020000
-
-
 struct mdr32_clk {
 	u32 CLOCK_STATUS;
 	u32 PLL_CONTROL;
@@ -56,117 +53,40 @@ struct mdr32_port {
 	u32 GFEN;
 };
 
+#define RST_CLK_BASE				0x40020000
+#define RST_CLK					((volatile struct mdr32_clk *) RST_CLK_BASE)
+#define RST_CLK_CLOCK_STATUS_PLL_USB_RDY	0x1
+#define RST_CLK_CLOCK_STATUS_PLL_CPU_RDY	0x2
+#define RST_CLK_CLOCK_STATUS_HSE_RDY		0x4
 
-#define RST_CLK             ((volatile struct mdr32_clk *) RST_CLK_BASE)
+#define RST_CLK_PLL_CONTROL_PLL_USB_ON		0x1
+#define RST_CLK_PLL_CONTROL_PLL_USB_RLD		0x2
+#define RST_CLK_PLL_CONTROL_PLL_CPU_ON		0x4
+#define RST_CLK_PLL_CONTROL_PLL_CPU_PLD		0x8
+#define RST_CLK_PLL_CONTROL_PLL_USB_MUL(x)	(((x) & 0x0f) << 4)
+#define RST_CLK_PLL_CONTROL_PLL_CPU_MUL(x)	(((x) & 0x0f) << 8)
 
-#define RST_CLK_CLOCK_STATUS_PLL_USB_RDY_Pos    0
-#define RST_CLK_CLOCK_STATUS_PLL_USB_RDY        ((uint32_t)0x00000001)
+#define RST_CLK_HS_CONTROL_HSE_ON		0x1
+#define RST_CLK_HS_CONTROL_HSE_BYP		0x2
 
-#define RST_CLK_CLOCK_STATUS_PLL_CPU_RDY_Pos    1
-#define RST_CLK_CLOCK_STATUS_PLL_CPU_RDY        ((uint32_t)0x00000002)
+#define RST_CLK_CPU_CLOCK_CPU_C1_SEL(x)		((x) & 0x03)
+#define RST_CLK_CPU_CLOCK_CPU_C2_SEL		0x04
+#define RST_CLK_CPU_CLOCK_CPU_C3_SEL		(((x) & 0x0f) << 4)
+#define RST_CLK_CPU_CLOCK_HCLK_SEL(x)		(((x) & 0x03) << 8)
 
-#define RST_CLK_CLOCK_STATUS_HSE_RDY_Pos        2
-#define RST_CLK_CLOCK_STATUS_HSE_RDY            ((uint32_t)0x00000004)
+#define PORTA		((volatile struct mdr32_port *) PORTA_BASE)
+#define PORTB		((volatile struct mdr32_port *) PORTB_BASE)
+#define PORTC		((volatile struct mdr32_port *) PORTC_BASE)
+#define PORTD		((volatile struct mdr32_port *) PORTD_BASE)
+#define PORTE		((volatile struct mdr32_port *) PORTE_BASE)
+#define PORTF		((volatile struct mdr32_port *) PORTF_BASE)
 
-
-/** @} */ /* End of group Periph_RST_CLK_RST_CLK_CLOCK_STATUS_Bits */
-
-/** @} */ /* End of group Periph_RST_CLK_Defines */
-
-/** @defgroup Periph_RST_CLK_Defines Defines
-  * @{
-  */
-
-/** @defgroup Periph_RST_CLK_RST_CLK_PLL_CONTROL_Bits RST_CLK_PLL_CONTROL
-  * @{
-  */
-
-#define RST_CLK_PLL_CONTROL_PLL_USB_ON_Pos      0
-#define RST_CLK_PLL_CONTROL_PLL_USB_ON          ((uint32_t)0x00000001)
-
-#define RST_CLK_PLL_CONTROL_PLL_USB_RLD_Pos     1
-#define RST_CLK_PLL_CONTROL_PLL_USB_RLD         ((uint32_t)0x00000002)
-
-#define RST_CLK_PLL_CONTROL_PLL_CPU_ON_Pos      2
-#define RST_CLK_PLL_CONTROL_PLL_CPU_ON          ((uint32_t)0x00000004)
-
-#define RST_CLK_PLL_CONTROL_PLL_CPU_PLD_Pos     3
-#define RST_CLK_PLL_CONTROL_PLL_CPU_PLD         ((uint32_t)0x00000008)
-
-#define RST_CLK_PLL_CONTROL_PLL_USB_MUL_Pos     4
-#define RST_CLK_PLL_CONTROL_PLL_USB_MUL_Msk     ((uint32_t)0x000000F0)
-
-#define RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos     8
-#define RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Msk     ((uint32_t)0x00000F00)
-
-
-/** @} */ /* End of group Periph_RST_CLK_RST_CLK_PLL_CONTROL_Bits */
-
-/** @} */ /* End of group Periph_RST_CLK_Defines */
-
-/** @defgroup Periph_RST_CLK_Defines Defines
-  * @{
-  */
-
-/** @defgroup Periph_RST_CLK_RST_CLK_HS_CONTROL_Bits RST_CLK_HS_CONTROL
-  * @{
-  */
-
-#define RST_CLK_HS_CONTROL_HSE_ON_Pos           0
-#define RST_CLK_HS_CONTROL_HSE_ON               ((uint32_t)0x00000001)
-
-#define RST_CLK_HS_CONTROL_HSE_BYP_Pos          1
-#define RST_CLK_HS_CONTROL_HSE_BYP              ((uint32_t)0x00000002)
-
-
-/** @} */ /* End of group Periph_RST_CLK_RST_CLK_HS_CONTROL_Bits */
-
-/** @} */ /* End of group Periph_RST_CLK_Defines */
-
-/** @defgroup Periph_RST_CLK_Defines Defines
-  * @{
-  */
-
-/** @defgroup Periph_RST_CLK_RST_CLK_CPU_CLOCK_Bits RST_CLK_CPU_CLOCK
-  * @{
-  */
-
-#define RST_CLK_CPU_CLOCK_CPU_C1_SEL_Pos        0
-#define RST_CLK_CPU_CLOCK_CPU_C1_SEL_Msk        ((uint32_t)0x00000003)
-
-#define RST_CLK_CPU_CLOCK_CPU_C2_SEL_Pos        2
-#define RST_CLK_CPU_CLOCK_CPU_C2_SEL            ((uint32_t)0x00000004)
-
-#define RST_CLK_CPU_CLOCK_CPU_C3_SEL_Pos        4
-#define RST_CLK_CPU_CLOCK_CPU_C3_SEL_Msk        ((uint32_t)0x000000F0)
-
-#define RST_CLK_CPU_CLOCK_HCLK_SEL_Pos          8
-#define RST_CLK_CPU_CLOCK_HCLK_SEL_Msk          ((uint32_t)0x00000300)
-
-#define PORTA               ((volatile struct mdr32_port *)    PORTA_BASE)
-#define PORTB               ((volatile struct mdr32_port *)    PORTB_BASE)
-#define PORTC               ((volatile struct mdr32_port *)    PORTC_BASE)
-#define PORTD               ((volatile struct mdr32_port *)    PORTD_BASE)
-#define PORTE               ((volatile struct mdr32_port *)    PORTE_BASE)
-#define PORTF               ((volatile struct mdr32_port *)    PORTF_BASE)
-
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_ROM_Pos   0
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_ROM       ((uint32_t)0x00000001)
-
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_RAM_Pos   1
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_RAM       ((uint32_t)0x00000002)
-
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_NAND_Pos  2
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_NAND      ((uint32_t)0x00000004)
-
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_CPOL_Pos  3
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_CPOL      ((uint32_t)0x00000008)
-
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_BUSY_Pos  7
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_BUSY      ((uint32_t)0x00000080)
-
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_WAIT_STATE_Pos 12
-#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_WAIT_STATE_Msk ((uint32_t)0x0000F000)
+#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_ROM		0x1
+#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_RAM		0x2
+#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_NAND		0x4
+#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_CPOL		0x8
+#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_BUSY		0x80
+#define EXT_BUS_CNTRL_EXT_BUS_CONTROL_WAIT_STATE(x)	(((x) & 0x0f) << 12)
 
 struct mdr32_ext_bus_control {
 	u32 RESERVED0[20];
@@ -182,29 +102,11 @@ struct mdr32_eeprom {
 	u32 KEY;
 };
 
-#define EEPROM_BASE         0x40018000
-#define EEPROM              ((volatile struct mdr32_eeprom *)  EEPROM_BASE)
-#define EEPROM_CMD_Delay_Pos                    3
-#define EEPROM_CMD_Delay_Msk                    ((uint32_t)0x00000038)
-
-#define RST_CLK_UART_CLOCK_UART1_BRG_Pos        0
-#define RST_CLK_UART_CLOCK_UART1_BRG_Msk        ((uint32_t)0x000000FF)
-        
-#define RST_CLK_UART_CLOCK_UART2_BRG_Pos        8
-#define RST_CLK_UART_CLOCK_UART2_BRG_Msk        ((uint32_t)0x0000FF00)
-
-#define RST_CLK_UART_CLOCK_UART1_CLK_EN_Pos     24
-#define RST_CLK_UART_CLOCK_UART1_CLK_EN         ((uint32_t)0x01000000)
-
-#define RST_CLK_UART_CLOCK_UART2_CLK_EN_Pos     25
-#define RST_CLK_UART_CLOCK_UART2_CLK_EN         ((uint32_t)0x02000000)
-
-#define EXT_BUS_CNTRL_BASE  0x400F0000
-
-#define EXT_BUS_CNTRL       ((volatile struct mdr32_ext_bus_control*)EXT_BUS_CNTRL_BASE)
-
-
-#define SYSCLOCK_MULTIPLIER		(48000000/8000000)
+#define EEPROM_BASE		0x40018000
+#define EEPROM			((volatile struct mdr32_eeprom *) EEPROM_BASE)
+#define EEPROM_CMD_Delay(x)	(((x) & 0x07) << 3)
+#define EXT_BUS_CNTRL_BASE	0x400F0000
+#define EXT_BUS_CNTRL		((volatile struct mdr32_ext_bus_control*)EXT_BUS_CNTRL_BASE)
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -220,16 +122,19 @@ void cpu_init_crit(void)
 {
 	/* Enable HSE generator. */
 	RST_CLK->HS_CONTROL = RST_CLK_HS_CONTROL_HSE_ON;
-	while (! (RST_CLK->CLOCK_STATUS & RST_CLK_CLOCK_STATUS_HSE_RDY))
+	while (!(RST_CLK->CLOCK_STATUS & RST_CLK_CLOCK_STATUS_HSE_RDY))
 		continue;
 
-	// Set up EEPROM waitstates
-#define SET_EEPROM_DELAY(WS) (EEPROM->CMD=((EEPROM->CMD)&(~EEPROM_CMD_Delay_Msk))|(WS<<EEPROM_CMD_Delay_Pos))
-#if (CONFIG_MDR32_SYSTEM_CLOCK < 25000000)
+	/* Set up EEPROM waitstates */
+#define SET_EEPROM_DELAY(w)	\
+	do {			\
+		EEPROM->CMD = (EEPROM->CMD & ~EEPROM_CMD_Delay(0)) | EEPROM_CMD_Delay(w);\
+	} while (0)
+#if (CONFIG_SYS_CPUCLOCK < 25000000)
 	SET_EEPROM_DELAY(0);
-#elif (CONFIG_MDR32_SYSTEM_CLOCK < 50000000)
+#elif (CONFIG_SYS_CPUCLOCK < 50000000)
 	SET_EEPROM_DELAY(1);
-#elif (CONFIG_MDR32_SYSTEM_CLOCK < 75000000)
+#elif (CONFIG_SYS_CPUCLOCK < 75000000)
 	SET_EEPROM_DELAY(2);
 #endif
 
@@ -237,80 +142,59 @@ void cpu_init_crit(void)
 	RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_IWDT;
 
 	/* Use HSE for CPU_C1 clock. */
-	RST_CLK->CPU_CLOCK = (2<<RST_CLK_CPU_CLOCK_CPU_C1_SEL_Pos);
+	RST_CLK->CPU_CLOCK = RST_CLK_CPU_CLOCK_CPU_C1_SEL(2);
 
-	        /* Setup PLL for CPU. */
-        RST_CLK->PLL_CONTROL = ((SYSCLOCK_MULTIPLIER-1)<<RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos);
-        RST_CLK->PLL_CONTROL = ((SYSCLOCK_MULTIPLIER-1)<<RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos) |
-                RST_CLK_PLL_CONTROL_PLL_CPU_ON;
-        RST_CLK->PLL_CONTROL = ((SYSCLOCK_MULTIPLIER-1)<<RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos) |
-                RST_CLK_PLL_CONTROL_PLL_CPU_ON | RST_CLK_PLL_CONTROL_PLL_USB_RLD;
-        RST_CLK->PLL_CONTROL = ((SYSCLOCK_MULTIPLIER-1)<<RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos) |
-                RST_CLK_PLL_CONTROL_PLL_CPU_ON;
-        while (! (RST_CLK->CLOCK_STATUS & RST_CLK_CLOCK_STATUS_PLL_CPU_RDY))
-                continue;
+	/* Setup PLL for CPU. */
+	RST_CLK->PLL_CONTROL = RST_CLK_PLL_CONTROL_PLL_CPU_MUL(CONFIG_MDR32_PLL_M - 1);
+	RST_CLK->PLL_CONTROL = RST_CLK_PLL_CONTROL_PLL_CPU_MUL(CONFIG_MDR32_PLL_M - 1) |
+		RST_CLK_PLL_CONTROL_PLL_CPU_ON;
+	RST_CLK->PLL_CONTROL = RST_CLK_PLL_CONTROL_PLL_CPU_MUL(CONFIG_MDR32_PLL_M - 1) |
+		RST_CLK_PLL_CONTROL_PLL_CPU_ON | RST_CLK_PLL_CONTROL_PLL_USB_RLD;
+	RST_CLK->PLL_CONTROL = RST_CLK_PLL_CONTROL_PLL_CPU_MUL(CONFIG_MDR32_PLL_M - 1) |
+		RST_CLK_PLL_CONTROL_PLL_CPU_ON;
+	while (! (RST_CLK->CLOCK_STATUS & RST_CLK_CLOCK_STATUS_PLL_CPU_RDY))
+		continue;
 
-        /* Use PLLCPUo for CPU_C2, CPU_C3 and HCLK. */
-        RST_CLK->CPU_CLOCK = (1<<RST_CLK_CPU_CLOCK_CPU_C2_SEL_Pos) |
-                                (2<<RST_CLK_CPU_CLOCK_CPU_C1_SEL_Pos) |
-                                (1<<RST_CLK_CPU_CLOCK_HCLK_SEL_Pos);
+	/* Use PLLCPUo for CPU_C2, CPU_C3 and HCLK. */
+	RST_CLK->CPU_CLOCK = RST_CLK_CPU_CLOCK_CPU_C2_SEL |
+		RST_CLK_CPU_CLOCK_CPU_C1_SEL(2) |
+		RST_CLK_CPU_CLOCK_HCLK_SEL(1);
 
 
-	// Setup external RAM
+	/* Setup external RAM */
 	RST_CLK->PER_CLOCK |= \
 				RST_CLK_PER_CLOCK_PORTA | \
 				RST_CLK_PER_CLOCK_PORTB | \
 				RST_CLK_PER_CLOCK_PORTC | \
 				RST_CLK_PER_CLOCK_PORTD | \
 				RST_CLK_PER_CLOCK_PORTE | \
-				RST_CLK_PER_CLOCK_PORTF; // Clock periferial devs
-	// Set funct and power, digital
+				RST_CLK_PER_CLOCK_PORTF;
+	/* Set funct and power, digital */
 	#define SETUP_PORT(PORT,F,A,P) (PORT->FUNC = F, PORT->ANALOG = A, PORT->PWR = P)
 	#define SETUP_PORT_MAIN(PORT) SETUP_PORT(PORT,0x55555555,0xFFFF,0xFFFFFFFF)
 	SETUP_PORT_MAIN(PORTA);
 	SETUP_PORT_MAIN(PORTB);
 	SETUP_PORT(PORTC,0xAA001554,0xFC7E,0xF0F03FFC);
-	PORTC->OE   = 0x0C00;
+	PORTC->OE = 0x0C00;
 	PORTC->RXTX = 0x0000;
 	SETUP_PORT(PORTD,0xC3FFE800,0x9FFF,0x03FFFC00);
 	SETUP_PORT(PORTE,0x55555555,0xFFFF,0xFFFFFFFF);
 	SETUP_PORT(PORTF,0x5555555F,0xFFFF,0xFFFFFFFF);
 
-
 	RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_EXT_BUS;
 	EXT_BUS_CNTRL->EXT_BUS_CONTROL=EXT_BUS_CNTRL_EXT_BUS_CONTROL_RAM | \
-		 (0xF<<EXT_BUS_CNTRL_EXT_BUS_CONTROL_WAIT_STATE_Pos);
+		 EXT_BUS_CNTRL_EXT_BUS_CONTROL_WAIT_STATE(0x0f);
 	/* Enable clock to watchdog timer */
 	RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_IWDT;
+	RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_PORTF;
 
+	/* Redefine portf function */
+	PORTF->FUNC |= 0x0f;
+	/* PF0(UART2_RXD) and  PF1(UART2_TXD) digital pins */
+	PORTF->ANALOG |= 3;
+	PORTF->PWR &= ~0x0f;
+	PORTF->PWR |= 0x05;
 
-        RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_PORTF;  // вкл. тактирования PORTF
-        PORTF->FUNC |= 0b1111;  // переопределенная функция для
-                                // PF0(UART2_RXD) и PF1(UART2_TXD)
-        PORTF->ANALOG |= 3;     // цифровые выводы
-        PORTF->PWR &= ~0b1111;
-        PORTF->PWR |= 0b0101;
-
-
-
-#if 0
-
-        /* Set UART2 for debug output. */
-        RST_CLK->PER_CLOCK |= RST_CLK_PER_CLOCK_UART2;  // вкл. тактирования UART2
-
-        /* Set baud rate divisor: 115200 bit/sec. */
-        RST_CLK->UART_CLOCK = RST_CLK_UART_CLOCK_UART2_CLK_EN | // разрешаем тактирование UART2
-                (0<<RST_CLK_UART_CLOCK_UART2_BRG_Pos);          // HCLK (8 МГц)
-        UART2->IBRD = (CONFIG_SYS_CPUCLOCK / CONFIG_BAUDRATE / 16);
-        UART2->FBRD = ((CONFIG_SYS_CPUCLOCK * 4 / CONFIG_BAUDRATE) & 077);
-
-        /* Enable UART2, transmiter only. */
-        UART2->LCR_H = (3<<UART_LCR_H_WLEN_Pos);// длина слова 8 бит
-        UART2->CR = UART_CR_UARTEN |            // пуск приемопередатчика
-                        UART_CR_RXE |           // прием разрешен
-                        UART_CR_TXE;            // передача разрешена
-
-#endif
 
 #if 0
 	int rv;

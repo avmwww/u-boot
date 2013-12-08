@@ -142,20 +142,12 @@ struct k56_eth_dev {
 
 #define to_k56_eth(_nd)	container_of(_nd, struct k56_eth_dev, netdev)
 
-static inline void k56_eth_reset(struct k56_eth_dev *mac)
-{
-	*((vu32 *)(FPGA_BASE + 0x40)) &= ~(1 << mac->unit);
-	udelay(1000);
-	*((vu32 *) (FPGA_BASE + 0x40)) |= 1 << mac->unit;
-	udelay(100000);
-}
-
 static inline void k56_eth_hw_setup(struct k56_eth_dev *mac)
 {
 	vu32	*p;
 	int	i;
 
-	k56_eth_reset(mac);
+	k56_eth_reset(mac->unit);
 
 	mac->reg->GCTRL = ETH_GCTRL_ASYNC_MODE | ETH_GCTRL_RD_CLR_STAT;
 
