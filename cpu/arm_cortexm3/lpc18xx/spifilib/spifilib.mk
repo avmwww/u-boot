@@ -1,8 +1,3 @@
-#
-# (C) Copyright 2010-2013
-# Vladimir Khusainov, Emcraft Systems, vlad@emcraft.com
-# Vladimir Skvortsov <vskvortsov@emcraft.com>
-#
 # See file CREDITS for list of people who contributed to this
 # project.
 #
@@ -22,27 +17,14 @@
 # MA 02111-1307 USA
 #
 
-include $(TOPDIR)/config.mk
+spifilib.bin: spifilib
+	$(OBJCOPY) -O binary $< $@
 
-LIB	= $(obj)lib$(BOARD).a
+spifilib: spifilib.o spifi_drv_M3.lib spifilib.lds
+	$(LD) $(LDLAGS) -Map spifilib.map -Tspifilib.lds -nostdlib -o $@ spifilib.o spifi_drv_M3.lib
 
-COBJS	:= board.o mss_spi/mss_spi.o zl30362_config.o
-
-SRCS	:= $(COBJS:.o=.c)
-OBJS	:= $(addprefix $(obj),$(COBJS))
-
-$(LIB):	$(obj).depend $(OBJS)
-	$(AR) $(ARFLAGS) $@ $(OBJS)
+spifilib.o: spifilib.h spifilib.c
+	$(CC) $(CFLAGS) -fshort-wchar -fshort-enums -c $+
 
 clean:
-	rm -f $(OBJS)
-
-distclean:	clean
-	rm -f $(LIB) core *.bak $(obj).depend
-
-#########################################################################
-
-# defines $(obj).depend target
-include $(SRCTREE)/rules.mk
-
-sinclude $(obj).depend
+	$(RM) spifilib.o spifilib spifilib.bin
